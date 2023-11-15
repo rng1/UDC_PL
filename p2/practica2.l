@@ -15,7 +15,7 @@ content     ([^<&\n]|{entity})*
 openTag     <{element}{delim}?>
 closeTag    <\/{element}{delim}?>
 
-version     {delim}version{eq}{quote}[0-9]+.[0-9]+{quote}
+version     {delim}version{eq}{quote}1.[0-9]+{quote}
 encoding    {delim}encoding{eq}{quote}[A-Za-z]([A-Za-z0-9._]|-)*{quote}
 header      <\?xml{version}{encoding}?{delim}?\?>
 
