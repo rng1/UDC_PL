@@ -20,13 +20,11 @@ encoding    {delim}encoding{eq}{quote}[A-Za-z]([A-Za-z0-9._]|-)*{quote}
 header      <\?xml{version}{encoding}?{delim}?\?>
 
 %%
-{header} { 
-    yylloc.first_line = yylloc.last_line;
-    return HEADER;
-}
+{header} { return HEADER; }
+{comment} { return COMMENT; }
+{content} { return CONTENT; }
 
 {openTag} {
-    yylloc.first_line = yylloc.last_line;
     yylval.element[0] = '\0';
 
     strncpy(yylval.element, yytext + 1, yyleng - 2);
@@ -36,7 +34,6 @@ header      <\?xml{version}{encoding}?{delim}?\?>
 }
 
 {closeTag} {
-    yylloc.first_line = yylloc.last_line;
     yylval.element[0] = '\0';
     
     strncpy(yylval.element, yytext + 2, yyleng - 3);
@@ -45,29 +42,14 @@ header      <\?xml{version}{encoding}?{delim}?\?>
     return CLOSETAG;
 }
 
-{comment}    {
-    yylloc.first_line = yylloc.last_line;
-    return COMMENT;
-}
-
 {delim}      {
-    yylloc.first_line = yylloc.last_line;
-    
     for (int i = 0; i < yyleng; i++)
         yylloc.last_line += (yytext[i] == '\n');
 
     return DELIM;
 }
 
-{content}   {
-    yylloc.first_line = yylloc.last_line;
-    return CONTENT;
-}
-
-. {
-    yylloc.first_line = yylloc.last_line;
-    return NON_VALID;
-}
+. { return NON_VALID; }
 %%
 
 int yywrap() { return 1; }
