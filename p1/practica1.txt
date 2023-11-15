@@ -1,0 +1,81 @@
+Procesamiento de Lenguajes - Práctica 1. Análisis Léxico
+por: Rodrigo Naranjo González
+
+--------------------------------------------------------
+
+Al comienzo del código se declaran las variables que se utilizarán a lo largo del programa:
+	- charCount: int
+		Lleva la cuenta de los caracteres del texto, donde se incluyen todos los caracteres de las palabras que se reconozcan así como "."
+	- wordCount: int
+		Lleva la cuenta del número total de palabras en el texto.
+	- numCount: int
+		Lleva la cuenta del número de palabras numéricas en el texto, por ejemplo "123".
+	- mayusCount: int
+		Lleva la cuenta del número de palabras cuyos caracteres estén en mayúscula, por ejemplo "MAYUSCULA".
+	- minusCount: int
+		Lleva la cuenta del número de palabras cuyos caracteres estén en minúscula, por ejemplo "minuscula".
+	- mixCount: int
+		Lleva la cuenta del número de palabras con caracteres mixtos (mayúsculas y minúsculas en la misma palabra) y especiales, por ejemplo "a2ki?-)7".
+	- sentenceCount: int
+		Lleva la cuenta del número de frases del texto, entendiendo como frase cualquier "." encontrado que sea precedido por una palabra. Esto significa que en la palabra "palabra..", los dos puntos seguidos no implican dos frases.
+	- inSentence: int
+		Variable auxiliar que se utiliza para comprobar si la aparición de "." se debe contabilizar como una frase. Cuando se reconoce una palabra, "inSentence" se marca como 1, y al encontrar "." se realiza una comprobación para convalidar ese punto como fin de frase.
+
+Tras las declaraciones de las variables, se encuentran las definiciones y reglas que corresponden a cada caso:
+	- delim: [ \t\n]+
+		Cualquier delimitador (espacio, tabulador, o nueva línea) que no se deba contabilizar como palabra o caracter.
+	- mayus: [A-Z]+
+		Cualquier palabra que esté compuesta completamente por caracteres en mayúscula.
+	- minus: [a-z]+
+		Cualquier palabra que esté compuesta completamente por caracteres en minúscula.
+	- num: [0-9]+
+		Cualquier palabra que esté compuesta completamente por caracteres numéricos.
+	- word: [^ \t\n.]+
+		Cualquier palabra que no contenga un espacio, un tabulador, una nueva línea, o un punto. Esto contabiliza las palabras mixtas que no correspondan con las reglas anteriores.
+	- eos: [.]
+		Simboliza el fin de una frase o simplemente un punto que contabilizar como caracter.
+
+Por último, se incluye el código que se deberá ejecutar cuando la entrada corresponda a alguna de las reglas definidas:
+	- delim:
+		Se omiten, no es necesario realizar ninguna operación.
+	- mayus, minus, num, word:
+		Se comportan de manera similar, primero se suma el contador "wordCount" de palabras totales, así como el número de caracteres de la palabra. Después, se suma el contador correspondiente de cada tipo de palabra (en el caso de "word" no es necesario), y se marca "inSentence" como 1, para que se reconozca una frase cuando se alcance un punto.
+	- eos:
+		Se incrementa un caracter en el contador global y, si "inSentence" es igual a 1, indicando que este punto es un fin de frase, se incrementa el contador de frases y se marca "inSentence" a 0. Si tras ese punto se encuentra otro sin una palabra por en medio, simplemente se incrementaría el caracter, y no supondría una frase nueva.
+
+Consideraciones:
+	- Se debe tener en cuenta que, como los acentos y tildes pertenecen al grupo de caracteres especiales, palabras como "MAYÚSCULA" o "minúscula" no incrementarían el contador "mayusCount" o "minusCount", respectivamente, si no el contador "mixCount", ya que "Ú" y "ú" son caracteres especiales.
+
+Las salidas esperadas son:
+	- Prueba 1
+		- No. caracteres:	61
+		- No. palabras:		9
+		- No. mixtas:		3
+		- No. mayúsculas:	2
+		- No. minúsculas:	3
+		- No. numéricas:	1
+		- No. frases:		6
+	- Prueba 2
+		- No. caracteres:	17
+		- No. palabras:		5
+		- No. mixtas:		1
+		- No. mayúsculas:	0
+		- No. minúsculas:	3
+		- No. numéricas:	1
+		- No. frases:		1
+	- Prueba 3
+		- No. caracteres:	0
+		- No. palabras:		0
+		- No. mixtas:		0
+		- No. mayúsculas:	0
+		- No. minúsculas:	0
+		- No. numéricas:	0
+		- No. frases:		0
+	- Prueba 4
+		- No. caracteres: 	22
+		- No. palabras: 	1
+		- No. mixtas: 		1
+		- No. mayúsculas: 	0
+		- No. minúsculas: 	0
+		- No. numéricas: 	0
+		- No. frases: 		1
