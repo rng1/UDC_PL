@@ -1,0 +1,111 @@
+Procesamiento de Lenguajes - Práctica 2. Análisis Sintáctico
+por: Rodrigo Naranjo González
+
+------------------------------------------------------------
+
+Archivo 'practica2.l'
+============================================================
+
+Encontramos las siguientes definiciones y reglas que corresponden a cada caso:
+	- delim: [ \t\n]+
+		Cualquier delimitador (espacio, tabulador, o nueva línea) que no se deba contabilizar como palabra o caracter.
+	- quote: \"|\'
+		Ambas posibilidades a la hora de escribir comillas, por comodidad.
+	- eq: {delim}?={delim}?
+		Un símbolo de igual antecedido y precedido por cualquier cantidad de {delim} o ninguna (operador opcional "?").
+	- comment: <!--(-?[^-])*-->
+		Utilizado para definir un comentario. Comienza por "<!--" y termina por "-->", y puede contener entre esto cualquier caracter, o ninguno, excepto dos guiones consecutivos.
+	- element: [a-zA-Z:_][0-9a-zA-Z:_\-.]*
+        Cualquier elemento válido de XML para formar una etiqueta, siguiendo las reglas sintácticas del lenguaje (no pueden empezar por "-", por ejemplo).
+	- entity: &{element};
+		Define una entidad de XML.
+    - content: ([^<&\n]|{entity})*
+        Cualquier sucesión de caracteres que no empiecen por "&" (denota entidad), a no ser que se escriba una entidad con la regla definida anteriormente, "<" (denota etiqueta), una nueva línea.
+    - openTag: <{element}{delim}?>
+        Define la apertura de una etiqueta como un elemento bien formado y cualquier delimitador.
+    - closeTag: <\/{element}{delim}?>
+        Igual que la apertura pero comenzando por "</", un cierre de etiqueta.
+    - version: {delim}version{eq}{quote}1.[0-9]+{quote}
+        Define la parte de la cabecera que indica la versión, se asume que no puede superar el 1.x.
+    - encoding: {delim}encoding{eq}{quote}[A-Za-z]([A-Za-z0-9._]|-)*{quote}
+        Define la parte de la cabecera que indica el encoding, no se comprueba que sea un encoding correcto, solo que esté bien formado.
+    - header: <\?xml{version}{encoding}?{delim}?\?>
+        Define la cabecera del documento XML, con el encoding opcional.
+
+Por último, se incluye el código que se deberá ejecutar cuando la entrada corresponda a alguna de las reglas definidas:
+	- {header}, {comment}, {content}, .:
+		Devuelven el token correspondiente a cada elemento, cualquier otro elemento (".") devuelve un token que denota un caracter no válido.
+	- {openTag}, {closeTag}:
+        Copia el nombre de la etiqueta en "yylval.element", un atributo del token respectivo en el archivo .y, omitiendo los caracteres de apertura y cierre de etiqueta ("<", "</", ">") y devuelve el token correspondiente.
+	- {delim}:
+        Lleva la cuenta de las líneas del archivo y devuelve el token correspondiente.
+
+
+Archivo 'practica2.y'
+============================================================
+
+Antes de comenzar se realiza la declaracion de los tokens que corresponden a cada elemento visto anteriormente, con un valor numérico que permite al parser diferenciarlos y clasificarlos. Adicionalmente, a los tokens correspondientes a las etiquetas se les asigna el atributo de "element", que contendrá el nombre de la etiqueta a efectos de visualizar los mensajes de error más adelante.
+A continuación encontramos las reglas:
+    S ->
+        - HEADER skip tag skip:
+            Define la estructura básica de un documento XML, asegurando que no puedan haber elementos antes de la cabecera.
+        - expr error:
+            Si el parser encuentra cualquier expresión antes de una cabecera, se lanza un error.
+        - HEADER error:
+            Si el parser no encuentra una etiqueta después de la cabecera (la etiqueta principal), se lanza un error.
+        - HEADER skip tag skip error:
+            Si el parser encuentra contenido fuera de la etiqueta principal del documento, se lanza un error.
+        - HEADER skip OPENTAG expr:
+            Si el parser encuentra una etiqueta de apertura sin cierre, se lanza un error.
+
+    skip ->
+        - /*empty*/
+            Se puede dar la ausencia de este símbolo.
+        - skip DELIM
+            Representa la secuencia de este símbolo seguido del token DELIM definido anteriormente.
+        - skip COMMENT
+            Representa la secuencia de este símbolo seguido del token COMMENT definido anteriormente, y permite al parser ignorar los comentarios.
+
+    expr ->
+        - /*empty*/
+            Se puede dar la ausencia de este símbolo.
+        - expr tag 
+            Representa la secuencia de este símbolo seguido del símbolo no terminal "tag", que permite parsear los pares de etiquetas del documento.
+        - expr DELIM, expr COMMENT, expr CONTENT
+            Representa la secuencia de este símbolo seguido de cualquiera de los símbolos terminales DELIM, COMMENT, y CONTENT, que se encuentra en el documento, parseando el texto y comentarios.
+        - expr NON_VALID
+            Si se entuentra un caracter no válido, definido en el fichero .l, se devuelve un error.
+    
+    tag ->
+        - OPENTAG expr CLOSETAG
+            Representa un par de etiquetas conteniendo una apertura, un cierre, y cualquier expresión entre ellas. Si el valor del atributo "element" de las etiquetas de apertura y cierre no coincide, se lanza un error.
+
+Una vez finalizado el parseo, si no se encuentran errores se lanza el mensaje de "Sintaxis XML correcta" y se finaliza el programa.
+
+
+Anexo
+============================================================
+
+Consideraciones:
+    - Solo detecta el primer error que aparece en el archivo y, una vez encontrado, se lanza el mensaje y se finaliza la ejecución.
+    - No reúne todos los casos posibles de error.
+    - No discrimina algunos errores, por ejemplo una "&" indicaría una entidad que no se ha terminado con ";", o una "<" indicaría el conflicto con la apertura de una etiqueta. Estos casos se generalizan por simplicidad.
+    - No distingue un fichero vacío, simplemente indica que la cabecera no existe.
+    - No distingue atributos en las etiquetas.
+    - No tiene en cuenta etiquetas de auto-cierre del estilo "<tag/>".
+    - No distingue entre diferentes encodings.
+
+Las salidas esperadas son:
+    (ejemplo usado : resumen del caso)
+	- valido.xml : archivo XML bien formado
+		>> Sintaxis XML correcta.
+    - error_contenido_1.xml : caracter "&" sin corresponder a una entidad
+        >> Sintaxis XML incorrecta. Error en linea 3: Contenido no permitido.
+    - error_contenido_2.xml : contenido después de la etiqueta principal
+        >> Sintaxis XML incorrecta. Error en linea 4: No se admite contenido fuera de una pareja de etiquetas.
+    - error_etiqueta_1.xml : par mal escrito
+        >> Sintaxis XML incorrecta. Error en linea 18: Encontrado '</XD>', se esperaba '</CD>'.
+    - error_etiqueta_2.xml : etiqueta sin cierre
+        >> Sintaxis XML incorrecta. Error en linea 27: No se encuentra cierre para la etiqueta '<CATALOG>'.
+    - error_header.xml : archivo sin cabecera
+        >> Sintaxis XML incorrecta. Error: No se encuentra la cabecera del archivo.
