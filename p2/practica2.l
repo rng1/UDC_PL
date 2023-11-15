@@ -3,7 +3,7 @@
 #include "practica2.tab.h"
 %}
 
-delim       [ \t\r\n]+
+delim       [ \t\n]+
 quote       \"|\'
 eq          {delim}?={delim}?
 
