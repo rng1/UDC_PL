@@ -88,7 +88,6 @@ Anexo
 ============================================================
 
 Consideraciones:
-    - Solo detecta el primer error que aparece en el archivo y, una vez encontrado, se lanza el mensaje y se finaliza la ejecución.
     - No reúne todos los casos posibles de error.
     - No discrimina algunos errores, por ejemplo una "&" indicaría una entidad que no se ha terminado con ";", o una "<" indicaría el conflicto con la apertura de una etiqueta. Estos casos se generalizan por simplicidad.
     - No distingue un fichero vacío, simplemente indica que la cabecera no existe.
@@ -98,7 +97,7 @@ Consideraciones:
 
 Las salidas esperadas son:
     (ejemplo usado : resumen del caso)
-	- valido.xml : archivo XML bien formado
+    - valido.xml : archivo XML bien formado
 		>> Sintaxis XML correcta.
     - error_contenido_1.xml : caracter "&" sin corresponder a una entidad
         >> Sintaxis XML incorrecta. Error en linea 3: Contenido no permitido.
